@@ -59,13 +59,18 @@ namespace AndroidInput{
 		{
 			CheckSleep ();
 			CalculateGridResolution ();
+
 		}
 		
 		// Update is called once per frame
 		void OnGUI () {
 
-			if (isAsleep)
+			if (isAsleep) {
+				Vector3 jitter = new Vector3(0.025f,0.025f,0f);
+				jitter.Scale(Random.insideUnitSphere);
+				this.transform.localPosition += jitter;
 				return;
+			}
 
 			for (int i = 0; i < Input.touches.Length; i++) {
 				if(m_moved && Input.touches[i].phase == TouchPhase.Began)

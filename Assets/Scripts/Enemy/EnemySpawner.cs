@@ -8,9 +8,12 @@ public class EnemySpawner : MonoBehaviour {
 
 	public int maxEnemies = 10;
 	private List<GameObject> enemies = new List<GameObject> ();
+	public GameObject[] enemyPrefabs;
 
 	public float enemySpawnTime = 2f; 
 	private float enemySpawnTimer = 0f;
+
+	public float spawnJitter = 0.95f;
 
 
 	// Use this for initialization
@@ -36,13 +39,15 @@ public class EnemySpawner : MonoBehaviour {
 
 	void SpawnNewEnemy()
 	{
-		if (enemies.Count >= maxEnemies)
+		if (enemies.Count >= maxEnemies || Random.value > spawnJitter)
 			return;
 
 		float _x = Random.Range (0f, (float)Screen.width);
 		float _y = Random.Range (0f, (float)Screen.height);
 
-		GameObject newEnemy = GameObject.Instantiate (enemy01);
+		int enemyIndex = Mathf.FloorToInt( Random.Range (0, enemyPrefabs.Length) );
+
+		GameObject newEnemy = GameObject.Instantiate (enemyPrefabs[enemyIndex]);
 		newEnemy.transform.parent = this.transform;
 		newEnemy.transform.localPosition = Camera.main.ScreenToWorldPoint( new Vector3 (_x, _y, 0f) );
 		enemies.Add (newEnemy);

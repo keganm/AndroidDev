@@ -32,11 +32,17 @@ namespace AndroidInput{
 
 		void Update()
 		{
-			this.transform.localPosition = Vector3.Lerp (this.transform.localPosition, m_targetPosition, m_targetSmoothness * m_deltaVelocity);
+			Vector2 tp = new Vector2 (m_targetPosition.x, m_targetPosition.y);
+			Vector2 cp = new Vector2 (this.transform.localPosition.x, this.transform.localPosition.y);
+			this.GetComponent<Rigidbody2D> ().velocity = (tp - cp) * m_targetSmoothness;
+
+			//this.GetComponent<Rigidbody2D> ().position = Vector2.Lerp (cp, tp, m_targetSmoothness * m_deltaVelocity);
+			UpdateInput ();
+			//this.transform.localPosition = Vector3.Lerp (this.transform.localPosition, m_targetPosition, m_targetSmoothness * m_deltaVelocity);
 		}
 		
 		// Update is called once per frame
-		void OnGUI () {
+		void UpdateInput () {
 
 			for (int i = 0; i < Input.touches.Length; i++) {
 				if(m_moved && Input.touches[i].phase == TouchPhase.Began)
@@ -69,11 +75,13 @@ namespace AndroidInput{
 		{
 			if(textDebug.debugIsOn)
 				textDebug.Log ("touchDelta" + touchDelta.ToString());
-
+			/*
+			 * /TODO: find a more consistent/satisfying approach to delta tracking
 			if (touchDelta.magnitude > m_deltaThreshold * 2)
-				m_deltaVelocity = 2.0f;
+				m_deltaVelocity = 4.0f;
 			else
 				m_deltaVelocity = 1.0f;
+				*/
 
 			Vector3 direction = Vector3.zero;
 			if (Mathf.Abs (touchDelta.x) > Mathf.Abs (touchDelta.y)) {

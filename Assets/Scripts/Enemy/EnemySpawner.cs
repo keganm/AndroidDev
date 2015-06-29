@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 
 public class EnemySpawner : MonoBehaviour {
+	public GameController gameController;
 	[System.Serializable]
 	public struct EnemyProbability
 	{
@@ -24,9 +25,17 @@ public class EnemySpawner : MonoBehaviour {
 	public EditRect m_editRect;
 	public Rect m_spawnRect = new Rect (-1.0f, -1.0f, 2.0f, 2.0f);
 
+	public bool killingEnemies = false;
+
 	// Use this for initialization
 	void Start () {
-		m_editRect = this.GetComponent<EditRect> ();
+		
+		if (gameController == null) {
+			gameController = GameObject.FindWithTag ("GameController").GetComponent<GameController> ();
+			if(gameController!= null)
+				gameController.enemySpawner = this;
+		}
+
 
 		enemySpawnTimer = Time.time;
 		prefabWeightSum = GetTotalProbability ();
@@ -36,6 +45,11 @@ public class EnemySpawner : MonoBehaviour {
 		SpawnNewEnemy ();
 	}
 
+	public void GetBoundingRect()
+	{
+		m_editRect = GameObject.FindWithTag ("BoundingBox").GetComponent<EditRect> ();
+	}
+
 	public void Reset(){
 		for (int i = 0; i < enemies.Count; ++i) {
 			enemies[i].GetComponent<Enemy_Base>().Reset();
@@ -43,6 +57,7 @@ public class EnemySpawner : MonoBehaviour {
 		enemies.Clear ();
 
 		enemySpawnTimer = 0f;
+		killingEnemies = false;
 	}
 
 	Rect GetSpawnRect()
@@ -60,6 +75,26 @@ public class EnemySpawner : MonoBehaviour {
 		return tmp;
 	}
 
+	public void KillAll()
+	{
+		killingEnemies = true;
+	}
+
+	public bool AllEnemiesKilled()
+	{
+		return (killingEnemies && (enemies.Count == 0));
+	}
+
+	public void KillGenericEnemy (int enemy)
+	{
+		if (killingEnemies && enemies.Count > enemy) {
+			if(enemies[enemy] == null)
+				enemies.RemoveAt(enemy);
+			else
+				enemies [enemy].GetComponent<Enemy_Base> ().Kill ();
+		}
+	}
+
 	public int GetEnemyCount()
 	{
 		return enemies.Count;
@@ -70,6 +105,13 @@ public class EnemySpawner : MonoBehaviour {
 		if (Time.timeScale <= 0f)
 			return;
 
+		if (killingEnemies) {
+			KillGenericEnemy(0);
+			KillGenericEnemy(1);
+			if(AllEnemiesKilled())
+				gameController.StageCleared();
+		}
+
 		CheckEnemyAlive ();
 
 		if (Time.time - enemySpawnTimer > enemySpawnTime) {
@@ -77,10 +119,23 @@ public class EnemySpawner : MonoBehaviour {
 			enemySpawnTimer = Time.time;
 		}
 	}
+	
+	public void GetBoundingBox()
+	{
+		m_editRect = GameObject.FindGameObjectWithTag("BoundingBox").GetComponent<EditRect> ();
+	}
 
 	void SpawnNewEnemy()
 	{
-		if (enemies.Count >= maxEnemies || Random.value > spawnJitter)
+		if (m_editRect == null) {
+			GetBoundingBox();
+			if(m_editRect == null)
+				return;
+			else
+				m_spawnRect = GetSpawnRect();
+		}
+
+		if (enemies.Count >= maxEnemies || Random.value > spawnJitter || killingEnemies)
 			return;
 		
 		GetSpawnRect ();
@@ -88,12 +143,11 @@ public class EnemySpawner : MonoBehaviour {
 		float _y = Random.Range (m_spawnRect.yMin,m_spawnRect.yMax);
 
 
-
-		GameObject newEnemy = GameObject.Instantiate (GetEnemyWithWeight());
-		newEnemy.transform.parent = this.transform;
+		
 		//Scaled to push z back down to 0
 		Vector3 spawnPoint = new Vector3 (_x, _y, 0f);
-		newEnemy.transform.localPosition = new Vector3(spawnPoint.x,spawnPoint.y, 0f);
+		GameObject newEnemy = GameObject.Instantiate (GetEnemyWithWeight(),new Vector3(spawnPoint.x,spawnPoint.y, 0f),new Quaternion(0,0,0,0)) as GameObject;
+		newEnemy.transform.parent = this.transform;
 	//	newEnemy.GetComponent<Enemy_Base> ().ContainerRect = spawnRectangle;
 		newEnemy.GetComponent<Enemy_Base> ().InitEnemy (m_editRect);
 		enemies.Add (newEnemy);

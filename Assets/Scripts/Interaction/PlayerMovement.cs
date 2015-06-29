@@ -35,8 +35,16 @@ public class PlayerMovement : MonoBehaviour
 		Reset ();
 	}
 
+	public void GetBoundingBox()
+	{
+		m_editRect = GameObject.FindGameObjectWithTag("BoundingBox").GetComponent<EditRect> ();
+		Reset ();
+	}
+
 	void Update ()
 	{
+
+
 		Vector2 tp = new Vector2 (m_targetPosition.x, m_targetPosition.y);
 		Vector2 cp = new Vector2 (this.transform.localPosition.x, this.transform.localPosition.y);
 		body.velocity = (tp - cp) * m_targetSmoothness;
@@ -55,6 +63,7 @@ public class PlayerMovement : MonoBehaviour
 
 	void LateUpdate ()
 	{
+
 		CalculateGridResolution ();
 		CheckSleep ();
 	}
@@ -67,6 +76,12 @@ public class PlayerMovement : MonoBehaviour
 //				Vector3 jitter = new Vector3(0.025f,0.025f,0f);
 //				jitter.Scale(Random.insideUnitSphere);
 //				this.transform.localPosition += jitter;
+			return;
+		}
+
+		
+		if (m_editRect == null) {
+			GetBoundingBox ();
 			return;
 		}
 		

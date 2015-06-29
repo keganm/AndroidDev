@@ -29,7 +29,8 @@ public class Enemy_Base : MonoBehaviour {
 	public int m_maxChildren = 25;
 	public bool m_isDestroyingChildren = false;
 
-	private ParticleSystem pSystem;
+	public ParticleSystem deathParticleSystem;
+	public ParticleSystem spawnParticleSystem;
 
 	private Rect m_containerRect;
 	public Rect ContainerRect {
@@ -43,7 +44,6 @@ public class Enemy_Base : MonoBehaviour {
 	public virtual void InitEnemy(EditRect _rect)
 	{
 		M_SPAWNER = this.GetComponentInParent<EnemySpawner> ();
-		pSystem = this.GetComponentInChildren<ParticleSystem> ();
 		//textDebug = Camera.main.GetComponent<GuiTextDebug> ();
 
 		m_editRect = _rect;
@@ -89,6 +89,11 @@ public class Enemy_Base : MonoBehaviour {
 	{
 		if (Time.timeScale <= 0f)
 			return;
+
+		if (spawnParticleSystem.emissionRate > 5)
+			spawnParticleSystem.emissionRate /= 1.2f;
+		else
+			spawnParticleSystem.emissionRate = 0;
 
 		if (m_isDestroyingChildren){
 			DestroyChildren ();
@@ -174,12 +179,12 @@ public class Enemy_Base : MonoBehaviour {
 		m_isDying = true;
 
 		this.GetComponentInChildren<MeshRenderer> ().enabled = false;
-		pSystem.Emit (1000);
+		deathParticleSystem.Emit (1000);
 	}
 
 	public virtual void DyingSequence()
 	{
-		if (pSystem.particleCount < 10) {
+		if (deathParticleSystem.particleCount < 10) {
 			DestroyImmediate(this.gameObject);
 		}
 	}

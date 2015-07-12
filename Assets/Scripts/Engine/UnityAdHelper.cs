@@ -161,7 +161,7 @@ public class UnityAdHelper : MonoBehaviour
 	
 	public void ShowAd ()
 	{
-		return false;
+		return;
 	}
 
 	public void ShowAd (string _zoneID)

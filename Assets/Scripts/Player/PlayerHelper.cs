@@ -1,10 +1,11 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 public class PlayerHelper : MonoBehaviour{
 	public GameController gameController;
 	public PlayerLife life;
 	public PlayerMovement movement;
+	public ShowDamage showDamage;
 
 	public float m_collisionRadius = 1.0f;
 
@@ -13,25 +14,25 @@ public class PlayerHelper : MonoBehaviour{
 		if (gameController == null) {
 			gameController = GameObject.FindWithTag ("GameController").GetComponent<GameController> ();
 			if(gameController!= null)
-				gameController.playerHelper = this;
+				gameController.m_playerHelper = this;
 		}
 
 		if (life == null)
 			life = this.GetComponent<PlayerLife> ();
 		if (movement == null)
 			movement = this.GetComponent<PlayerMovement> ();
-	}
-
-	void OnGUI()
-	{
-		Debug.DrawLine (new Vector3 (transform.position.x - m_collisionRadius, transform.position.y, transform.position.z), new Vector3 (transform.position.x + m_collisionRadius, transform.position.y, transform.position.z));
+		if (showDamage == null)
+			showDamage = this.GetComponent<ShowDamage> ();
 	}
 
 	public void RegisterEnemyHit(Enemy_Base enemy)
 	{
 		movement.StartSleep ();
-		life.TakeDamage (enemy.GetDamage ());
-		Camera.main.GetComponent<CameraShake> ().StartShake ();
+		life.TakeDamage (enemy.Damage);
+		showDamage.StartDamage ();
+		CameraShake cs = Camera.main.GetComponent<CameraShake> ();
+		if(cs != null)
+			cs.StartShake ();
 	}
 
 	public void Reset()

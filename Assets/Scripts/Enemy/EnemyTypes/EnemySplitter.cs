@@ -3,35 +3,35 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class EnemySplitter : Enemy_Base {
-	public int retargetTimer = 50;
-	public int retargetTime = 50;
-	public int splitTimer = 100;
-	public int splitTime = 0;
+	[SerializeField]	protected int m_retargetTimer = 50;
+	[SerializeField]	protected int m_splitTimer = 100;
+	[SerializeField]	protected float m_targetRadius = 0.5f;
+
+	protected int m_retargetTime = 50;
+	protected int m_splitTime = 0;
 	
-	public Vector3 nonTarget = Vector3.zero;
+	protected Vector3 m_targetArea;
+	protected Vector3 m_nonTarget = Vector3.zero;
 
-	public EnemySplitter parentEnemy = null;
-	public List<EnemySplitter> childrenEnemies = new List<EnemySplitter>();
+	protected EnemySplitter m_parentEnemy = null;
+	protected List<EnemySplitter> m_childrenEnemies = new List<EnemySplitter>();
 
-	private Vector3 targetArea;
-	public float targetRadius = 0.5f;
 	
 	override public void InitEnemy(EditRect _rect)
 	{
 		base.InitEnemy (_rect);
-		m_speed = Random.value * m_speed + m_speed;
 
 		ReTarget ();
 
-		targetArea = RandContainerPosition ();
+		m_targetArea = RandContainerPosition ();
 	}
 
 	override public void Reset()
 	{
-		for (int i = 0; i < childrenEnemies.Count; ++i) {
-			childrenEnemies[i].Reset();
+		for (int i = 0; i < m_childrenEnemies.Count; ++i) {
+			m_childrenEnemies[i].Reset();
 		}
-		childrenEnemies.Clear ();
+		m_childrenEnemies.Clear ();
 		base.Reset ();
 	}
 	
@@ -40,7 +40,7 @@ public class EnemySplitter : Enemy_Base {
 		ReTarget ();
 		SplitEnemy ();
 
-		m_acceleration = (nonTarget - m_position) * m_accelerationScale;
+		m_acceleration = (m_nonTarget - m_position) * m_accelerationScale;
 		
 		base.ApplyMovement (m_acceleration);
 
@@ -50,42 +50,42 @@ public class EnemySplitter : Enemy_Base {
 	private void ReTarget()
 	{
 
-		retargetTime++;
+		m_retargetTime++;
 
-		if (retargetTime < retargetTimer)
+		if (m_retargetTime < m_retargetTimer)
 			return;
 
-		retargetTime = 0;
+		m_retargetTime = 0;
 
-		if (parentEnemy == null) {
+		if (m_parentEnemy == null) {
 
 
 			Vector3 nta = RandContainerPosition();
 
-			targetArea = Vector3.Lerp(targetArea, nta, 0.1f);
+			m_targetArea = Vector3.Lerp(m_targetArea, nta, 0.1f);
 		}
 
 		EnemySplitter _parent = GetParentSplitter ();
-		float radius = ((float)_parent.childrenEnemies.Count / (float)m_maxChildren) * targetRadius;
+		float radius = ((float)_parent.m_childrenEnemies.Count / (float)m_maxChildren) * m_targetRadius;
 		Vector2 area = Random.insideUnitCircle * radius;
 		Vector2 size = ContainerRect.size;
 		area.Scale (Camera.main.ScreenToWorldPoint( size ));
 
-		Vector3 centerRandom = GetParent().GetComponent<EnemySplitter>().targetArea;
+		Vector3 centerRandom = GetParent().GetComponent<EnemySplitter>().m_targetArea;
 		Vector3 newTarget = new Vector3 (centerRandom.x + area.x, centerRandom.y + area.y, 0f);
 
 		//newTarget = RandContainerWorldPosition ();
-		nonTarget = Vector3.Lerp(nonTarget, newTarget, 0.5f);
+		m_nonTarget = Vector3.Lerp(m_nonTarget, newTarget, 0.5f);
 	}
 
 	private void SplitEnemy()
 	{
-		splitTime++;
+		m_splitTime++;
 
-		if (splitTime < splitTimer || M_SPAWNER == null)
+		if (m_splitTime < m_splitTimer || kSPAWNER == null)
 			return;
 		
-		splitTime = 0;
+		m_splitTime = 0;
 
 		if (MaximumChildren ())
 			return;
@@ -108,18 +108,18 @@ public class EnemySplitter : Enemy_Base {
 		}
 
 
-		newSplit.parentEnemy = _parentEnemy;
+		newSplit.m_parentEnemy = _parentEnemy;
 		newSplit.InitEnemy (this.m_editRect);
 		
-		_parentEnemy.childrenEnemies.Add (newEnemy.GetComponent<EnemySplitter> ());
+		_parentEnemy.m_childrenEnemies.Add (newEnemy.GetComponent<EnemySplitter> ());
 	}
 
 	public GameObject GetParent()
 	{
-		if (parentEnemy == null) {
+		if (m_parentEnemy == null) {
 			return this.gameObject;
 		} else {
-			return parentEnemy.GetParent ();
+			return m_parentEnemy.GetParent ();
 		}
 	}
 
@@ -130,21 +130,21 @@ public class EnemySplitter : Enemy_Base {
 
 	public override void Kill()
 	{
-		if (parentEnemy == null) {
-			m_isDestroyingChildren = childrenEnemies.Count > 0;
+		if (m_parentEnemy == null) {
+			m_isDestroyingChildren = m_childrenEnemies.Count > 0;
 
 			if (!m_isDestroyingChildren)
 				base.StartDying ();
 		} else {
 			if(!m_isDying)
-				parentEnemy.Kill();
+				m_parentEnemy.Kill();
 			base.StartDying ();
 		}
 	}
 
 	public bool MaximumChildren()
 	{
-		return childrenEnemies.Count >= m_maxChildren;
+		return m_childrenEnemies.Count >= m_maxChildren;
 	}
 
 	public override void DestroyChildren()
@@ -152,11 +152,11 @@ public class EnemySplitter : Enemy_Base {
 		if (Random.value < 0.75f)
 			return;
 
-		int randomDestoyed = Random.Range(0,childrenEnemies.Count-1);
-		childrenEnemies [randomDestoyed].StartDying ();
-		childrenEnemies.RemoveAt (randomDestoyed);
+		int randomDestoyed = Random.Range(0,m_childrenEnemies.Count-1);
+		m_childrenEnemies [randomDestoyed].StartDying ();
+		m_childrenEnemies.RemoveAt (randomDestoyed);
 
-		if (childrenEnemies.Count == 0)
+		if (m_childrenEnemies.Count == 0)
 			Kill ();
 	}
 }

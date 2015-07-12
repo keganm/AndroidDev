@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 [ExecuteInEditMode]
@@ -12,9 +12,12 @@ public class MainGUIHelper : MonoBehaviour {
 	void OnEnable () {
 		
 		if (gameController == null) {
-			gameController = GameObject.FindWithTag ("GameController").GetComponent<GameController> ();
+			GameObject gc = GameObject.FindWithTag ("GameController");
+			if(gc == null)
+				return;
+			gameController = gc.GetComponent<GameController> ();
 			if(gameController!= null)
-				gameController.mainGuiHelper = this;
+				gameController.m_mainGuiHelper = this;
 		}
 		canvases = this.GetComponentsInChildren<Canvas>();
 

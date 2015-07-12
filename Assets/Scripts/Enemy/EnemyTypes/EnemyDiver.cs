@@ -3,29 +3,32 @@ using System.Collections;
 
 public class EnemyDiver: Enemy_Base {
 
-	public bool isDiving = false;
-	public Vector3 nonTarget = Vector3.zero;
-	public float diveDistance = 2f;
-	public float wanderThreshold = 0.2f;
+	protected bool m_isDiving = false;
+	protected Vector3 m_nonTarget = Vector3.zero;
+	[SerializeField]	protected float m_diveDistance = 2f;
+	[SerializeField]	protected float m_wanderThreshold = 0.2f;
 	
 	override public void InitEnemy(EditRect _rect)
 	{
 		base.InitEnemy (_rect);
-		m_speed = Random.value * m_speed + m_speed;
-		
 		GetNewNonTarget();
 	}
 	
 	override public void UpdateMovement()
 	{
-		float dis = Vector3.Distance (m_playerTarget.transform.localPosition, this.transform.localPosition);
-		float accScale = (m_accelerationScale + (Random.Range (0f, m_accelerationScale)));
-		if (dis < diveDistance) {
-			nonTarget = m_playerTarget.transform.localPosition;
-			isDiving = true;
+		if (m_playerTarget == null) {
+			if(!FindTarget())
+				return;
 		}
 
-		if (isDiving) {
+		float dis = Vector3.Distance (m_playerTarget.transform.localPosition, this.transform.localPosition);
+		float accScale = (m_accelerationScale + (Random.Range (0f, m_accelerationScale)));
+		if (dis < m_diveDistance) {
+			m_nonTarget = m_playerTarget.transform.localPosition;
+			m_isDiving = true;
+		}
+
+		if (m_isDiving) {
 			
 			Vector3 target = m_playerTarget.transform.localPosition;
 			m_acceleration = (target - m_position) * accScale;
@@ -33,9 +36,7 @@ public class EnemyDiver: Enemy_Base {
 		}else{
 
 			GetNewNonTarget();
-			
-			Vector3 target = m_playerTarget.transform.localPosition;
-			m_acceleration = (nonTarget - m_position) * accScale;
+			m_acceleration = (m_nonTarget - m_position) * accScale;
 
 
 		}
@@ -45,7 +46,7 @@ public class EnemyDiver: Enemy_Base {
 
 	void GetNewNonTarget()
 	{
-		if (Vector3.Distance (nonTarget, m_position) < wanderThreshold)
-			nonTarget = RandContainerPosition ();
+		if (Vector3.Distance (m_nonTarget, m_position) < m_wanderThreshold)
+			m_nonTarget = RandContainerPosition ();
 	}
 }
